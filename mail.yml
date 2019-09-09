@@ -1,0 +1,23 @@
+---
+- name: Mail Server
+  hosts: localhost
+  tasks: 
+  - name: Install postfix package
+    yum: 
+      name: postfix
+      state: latest
+  - name: Start postfix service
+    service: 
+      name: postfix
+      state: started
+  - name: changing relayhost
+    blockinfile:
+      path: /etc/postfix/main.cf
+      block: |
+        myhostname = rahul.example.com
+#handlers:
+#- name: restart postfix
+ # service:
+  #  name: postfix
+   # state: restarted
+
