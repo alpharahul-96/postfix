@@ -1,6 +1,7 @@
 ---
 - name: Mail Server
   hosts: localhost
+  become: yes
   tasks: 
   - name: Install postfix package
     yum: 
@@ -10,14 +11,34 @@
     service: 
       name: postfix
       state: started
-  - name: changing relayhost
-    blockinfile:
+  - name: CHANGING HOSTNAME
+    lineinfile:
       path: /etc/postfix/main.cf
-      block: |
-        myhostname = rahul.example.com
-#handlers:
-#- name: restart postfix
- # service:
-  #  name: postfix
-   # state: restarted
-
+      regexp: '#myhostname = host.domain.tld'
+      line: myhostname = postbox
+  - name: CHANGING DOMAIN
+    lineinfile:
+      path: /etc/postfix/main.cf
+      regexp: '#mydomain = domain.tld'
+      line: mydomain = example.com
+  - name: DOMAIN
+    replace:
+      path: /etc/postfix/main.cf
+      regexp: '#myorigin = $myhostname'
+      replace: myorigin = $myhostname
+  - name: INTERFACES
+    replace:
+      path: /etc/postfix/main.cf
+      regexp: 'inet_interfaces = localhost'
+      replace: inet_interfaces = all
+  - name: DESTINATION
+    command: postconf -e "mydestination = $myhostname, localhost.$mydomain, localhost, $mydomain, mail.$mydomain, www.$mydomain, ftp.$mydomain"
+      #path: /etc/postfix/main.cf
+      #regex: 'mydestination = $myhostname, localhost.$mydomain, localhost'
+     # replace: mydestination = $myhostname, localhost.$mydomain, localhost, $mydomain, mail.$mydomain, www.$mydomain, ftp.$mydomain
+  - firewalld:
+      service: smtp
+      permanent: yes
+      state: enabled
+  - name:
+    command: systemctl restart postfix
